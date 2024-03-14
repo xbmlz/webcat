@@ -1,29 +1,10 @@
-use actix_web::{get, middleware, web, App, HttpServer, Responder, Result};
-use actix_web_lab::respond::Html;
-use askama::Template;
+use anyhow::Result;
+use webcat::handlers::{cat_handler, index_handler};
+use actix_web::{middleware, App, HttpServer};
 
-#[derive(serde::Deserialize)]
-struct CatQuery {
-    url: String,
-}
-
-#[derive(Template)]
-#[template(path = "index.html")]
-struct Index;
-
-#[get("/")]
-async fn index() -> Result<impl Responder> {
-    let html = Index.render().expect("Could not render template");
-    Ok(Html(html))
-}
-
-#[get("/cat")]
-async fn cat(query: web::Query<CatQuery>) -> impl Responder {
-    format!("{}", query.url)
-}
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     log::info!("starting HTTP server at http://localhost:8080");
@@ -33,11 +14,13 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::DefaultHeaders::new().add(("X-Version", "0.2")))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default().log_target("http_log"))
-            .service(index)
-            .service(cat)
+            .service(actix_files::Files::new("/public", "./public"))
+            .service(index_handler)
+            .service(cat_handler)
     })
     .bind(("127.0.0.1", 8080))?
-    .workers(1)
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }
