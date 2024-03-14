@@ -1,5 +1,20 @@
 {% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="/public/lib/viewerjs/viewer.min.css">
+{% endblock %}
+
 {% block content %}
 
-<img src="{{ url }}" />
+<img id="image" src="{{ url }}" />
+{% endblock %}
+
+{% block script %}
+<script src="/public/lib/viewerjs/viewer.min.js"></script>
+
+<script>
+    const viewer = new Viewer(document.getElementById('image'), {
+        
+    })
+</script>
 {% endblock %}
